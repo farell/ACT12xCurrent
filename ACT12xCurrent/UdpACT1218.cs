@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -22,13 +23,12 @@ namespace DataAcquisition
         private byte[] ipArray;
         private Dictionary<string, DataValue> dataBuffer;
         private int count;
-
-        //
         
         private IDatabase db;
         private string Tag;
+        private int times;
 
-        public UdpACT1218(UdpACT12xConfig config, DataGridView dataGridView,int rowIndex,Dictionary<string, DataValue> valueMap, ConnectionMultiplexer redis) : base(config.LocalPort, config.RemotePort, config.RemoteIpAddress,redis)
+        public UdpACT1218(UdpACT12xConfig config, DataGridView dataGridView,int rowIndex,Dictionary<string, DataValue> valueMap, ConnectionMultiplexer redis) : base(config.LocalPort,config.LocalIP, config.RemotePort, config.RemoteIpAddress,redis)
         {
             this.Tag = config.RemoteIpAddress + " : ";
             this.dataGridView = dataGridView;
@@ -36,6 +36,7 @@ namespace DataAcquisition
             this.config = config;
             this.rowIndex = rowIndex;
             this.count = 0;
+            this.times = 0;
             channels = new Dictionary<int, CurrentVoltageChannel>();
             //
             
@@ -139,6 +140,9 @@ namespace DataAcquisition
 
                 string stamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
+                StringBuilder sb = new StringBuilder(1024);
+                sb.Append(stamp + ",");
+
                 for (int i = 0; i < NumberOfChannels; i++)
                 {
 
@@ -150,6 +154,7 @@ namespace DataAcquisition
                     {
                         CurrentVoltageChannel cvc = channels[i + 1];
                         double value = cvc.GetResult(bytes);
+                        sb.Append(value.ToString() + ",");
 
                         string key = cvc.sensorId + "-" + cvc.type;
                         if (dataBuffer.ContainsKey(key))
@@ -184,12 +189,41 @@ namespace DataAcquisition
 
                     }
                 }
+                sb.Remove(sb.Length - 1, 1);
+                //sb.Append("\r\n");
+                times++;
+                if (times == 30)
+                {
+                    times = 0;
+                    AppendRecord(sb);
+                }
+
             }
             else
             {
                 log.Warn(Tag + "broken frame");
                 this.errMsg = "broken frame";
                 //message = this.deviceId + "strain broken frame: " + CVT.ByteToHexStr(by) + "\r\n";
+            }
+        }
+        /// <summary>
+        /// 写记录
+        /// </summary>
+        /// <param name="str"></param>
+        private void AppendRecord(StringBuilder str)
+        {
+            //if (!Directory.Exists("ErrLog"))
+            //{
+            //    Directory.CreateDirectory("ErrLog");
+            //}
+            string currentDate = this.config.RemoteIpAddress + "_"+DateTime.Now.ToString("yyyy-MM-dd")+ ".txt";
+
+            //string pathString = Path.Combine(@"D:\vibrate", currentDate);
+
+            using (StreamWriter sw = new StreamWriter(currentDate, true))
+            {
+                sw.WriteLine(str);
+                sw.Close();
             }
         }
     }

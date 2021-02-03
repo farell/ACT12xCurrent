@@ -44,6 +44,7 @@ namespace DataAcquisition
         private string remoteIpAddress;
         private int remotePort;
         private int localPort;
+        private string localIP;
         protected UdpClient udpServer;
 
         private BackgroundWorker backgroundWorker;
@@ -51,10 +52,11 @@ namespace DataAcquisition
         private string errMsg;
         private bool isSuccess;
 
-        public UdpACT12x(int localPort,int remotePort,string remoteAddress, ConnectionMultiplexer redis)
+        public UdpACT12x(int localPort,string localIP,int remotePort,string remoteAddress, ConnectionMultiplexer redis)
         {
             this.remoteIpAddress = remoteAddress;
             this.localPort = localPort;
+            this.localIP = localIP;
             this.remotePort = remotePort;
             backgroundWorker = new BackgroundWorker();
             //redis = ConnectionMultiplexer.Connect("localhost");
@@ -125,8 +127,10 @@ namespace DataAcquisition
         {
             try
             {
-                udpServer = new UdpClient(localPort);
-                udpServer.Connect(IPAddress.Parse(remoteIpAddress), remotePort);
+                //udpServer = new UdpClient(localPort);
+                //udpServer.Connect(IPAddress.Parse(remoteIpAddress), remotePort);
+                IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Parse(this.localIP), this.remotePort);
+                udpServer = new UdpClient(iPEndPoint);
             }
             catch (Exception ex) { }
 
@@ -138,14 +142,15 @@ namespace DataAcquisition
 
         public virtual void Stop()
         {
-            if (backgroundWorker.IsBusy)
-            {
-                backgroundWorker.CancelAsync();
-            }
             if (udpServer != null)
             {
                 udpServer.Close();
             }
+            if (backgroundWorker.IsBusy)
+            {
+                backgroundWorker.CancelAsync();
+            }
+            
         }
 
         //private bool FrameCheck(byte[] buffer, int length)
@@ -226,13 +231,15 @@ namespace DataAcquisition
         public string Database = "Data Source = BGK.db";
         public string RemoteIpAddress;
         public int RemotePort;
+        public string LocalIP;
         public int LocalPort;
         public string DeviceId;
 
-        public UdpACT12xConfig(string remoteIpAddress, int remotePort, int localPort, string sensorId)
+        public UdpACT12xConfig(string remoteIpAddress, int remotePort, int localPort,string localIP, string sensorId)
         {
             this.RemoteIpAddress = remoteIpAddress;
             this.RemotePort = remotePort;
+            this.LocalIP = localIP;
             this.LocalPort = localPort;
             this.DeviceId = sensorId;
         }

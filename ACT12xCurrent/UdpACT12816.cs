@@ -23,7 +23,7 @@ namespace DataAcquisition
         private IDatabase db;
         private string Tag;
 
-        public UdpACT12816(UdpACT12xConfig config, DataGridView dataGridView,int rowIndex, Dictionary<string, DataValue> valueMap, ConnectionMultiplexer redis) : base(config.LocalPort, config.RemotePort, config.RemoteIpAddress,redis)
+        public UdpACT12816(UdpACT12xConfig config, DataGridView dataGridView,int rowIndex, Dictionary<string, DataValue> valueMap, ConnectionMultiplexer redis) : base(config.LocalPort, config.LocalIP, config.RemotePort, config.RemoteIpAddress,redis)
         {
             this.Tag = config.RemoteIpAddress + " : ";
             this.dataGridView = dataGridView;

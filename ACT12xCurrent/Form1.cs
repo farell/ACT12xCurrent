@@ -45,8 +45,8 @@ namespace ACT12xCurrent
             LoadChannels();
             LoadDevices();
 
-            buttonStart.Enabled = true;
-            buttonStop.Enabled = false;
+            ToolStripMenuItemStart.Enabled = true;
+            ToolStripMenuItemStop.Enabled = false;
 
             timer = new System.Timers.Timer();
             timer.Elapsed += Timer_Elapsed;
@@ -389,7 +389,7 @@ namespace ACT12xCurrent
             {
                 connection.Open();
                 //string deviceType = "ACT12816";
-                string strainStatement = "select DeviceId,RemoteIP,RemotePort,LocalPort,Type,Desc from SensorInfo";
+                string strainStatement = "select DeviceId,RemoteIP,RemotePort,LocalPort,Type,Desc,LocalIP from SensorInfo";
                 SQLiteCommand command2 = new SQLiteCommand(strainStatement, connection);
                 using (SQLiteDataReader reader = command2.ExecuteReader())
                 {
@@ -401,14 +401,15 @@ namespace ACT12xCurrent
                         int LocalPort = reader.GetInt32(3);
                         string deviceType = reader.GetString(4);
                         string desc = reader.GetString(5);
+                        string localIP = reader.GetString(6);
                         int index = this.dataGridView1.Rows.Add();
 
-                        string[] itemString = { desc, deviceType, deviceId, remoteIP, RemotePort.ToString(), LocalPort.ToString() };
+                        string[] itemString = { desc, deviceType, deviceId, remoteIP, RemotePort.ToString(), LocalPort.ToString(),localIP };
                         ListViewItem item = new ListViewItem(itemString);
 
                         listView1.Items.Add(item);
 
-                        UdpACT12xConfig config = new UdpACT12xConfig(remoteIP, RemotePort, LocalPort, deviceId);
+                        UdpACT12xConfig config = new UdpACT12xConfig(remoteIP, RemotePort, LocalPort, localIP, deviceId);
 
                         UdpACT12x device = null;
 
@@ -435,43 +436,43 @@ namespace ACT12xCurrent
             }
         }
 
-        private void StartAcquisit()
-        {
-            serviceIsStop = false;
-            buttonStart.Enabled = false;
-            buttonStop.Enabled = true;
-        }
+        //private void StartAcquisit()
+        //{
+        //    serviceIsStop = false;
+        //    buttonStart.Enabled = false;
+        //    buttonStop.Enabled = true;
+        //}
 
-        private void StopAcquisit()
-        {
-            serviceIsStop = true;
-            buttonStart.Enabled = true;
-            buttonStop.Enabled = false;
-        }
+        //private void StopAcquisit()
+        //{
+        //    serviceIsStop = true;
+        //    buttonStart.Enabled = true;
+        //    buttonStop.Enabled = false;
+        //}
 
-        private void buttonStart_Click(object sender, EventArgs e)
-        {
-            buttonStart.Enabled = false;
-            buttonStop.Enabled = true;
-            foreach (var item in this.deviceList)
-            {
-                item.Value.Start();
-            }
-        }
+        //private void buttonStart_Click(object sender, EventArgs e)
+        //{
+        //    buttonStart.Enabled = false;
+        //    buttonStop.Enabled = true;
+        //    foreach (var item in this.deviceList)
+        //    {
+        //        item.Value.Start();
+        //    }
+        //}
 
-        private void buttonStop_Click(object sender, EventArgs e)
-        {
-            buttonStart.Enabled = true;
-            buttonStop.Enabled = false;
-            foreach (var item in this.deviceList)
-            {
-                item.Value.Stop();
-            }
-        }
+        //private void buttonStop_Click(object sender, EventArgs e)
+        //{
+        //    buttonStart.Enabled = true;
+        //    buttonStop.Enabled = false;
+        //    foreach (var item in this.deviceList)
+        //    {
+        //        item.Value.Stop();
+        //    }
+        //}
 
         private void buttonStopTest_Click(object sender, EventArgs e)
         {
-            this.buttonStart.Enabled = true;
+            //this.buttonStart.Enabled = true;
             //udpACT12816.Stop();
         }
 
@@ -503,7 +504,7 @@ namespace ACT12xCurrent
         {
             if (MessageBox.Show("确定要退出？", "系统提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
             {
-                if (buttonStop.Enabled)
+                if (ToolStripMenuItemStop.Enabled)
                 {
                     //buttonStop_Click(null, null);
                     foreach (var item in this.deviceList)
@@ -532,6 +533,31 @@ namespace ACT12xCurrent
                 this.WindowState = FormWindowState.Normal;
                 this.Activate();
             }
+        }
+
+        private void ToolStripMenuItemStart_Click(object sender, EventArgs e)
+        {
+            ToolStripMenuItemStart.Enabled = false;
+            ToolStripMenuItemStop.Enabled = true;
+            foreach (var item in this.deviceList)
+            {
+                item.Value.Start();
+            }
+        }
+
+        private void ToolStripMenuItemStop_Click(object sender, EventArgs e)
+        {
+            ToolStripMenuItemStart.Enabled = true;
+            ToolStripMenuItemStop.Enabled = false;
+            foreach (var item in this.deviceList)
+            {
+                item.Value.Stop();
+            }
+        }
+
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
         }
     }
 }
